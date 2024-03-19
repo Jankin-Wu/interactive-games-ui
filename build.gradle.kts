@@ -34,14 +34,13 @@ dependencies {
     implementation(compose.material3)
     implementation(compose.materialIconsExtended)
     implementation("io.github.succlz123:compose-imageloader-desktop:0.0.2")
-    implementation("javax.websocket:javax.websocket-api:1.1")
-    implementation("org.apache.tomcat.embed:tomcat-embed-websocket:9.0.52")
     implementation("org.projectlombok:lombok:1.18.30")
     implementation("com.alibaba.fastjson2:fastjson2:2.0.40")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion")
     implementation ("io.ktor:ktor-client-core:$ktorVersion")
     implementation ("io.ktor:ktor-client-websockets:$ktorVersion")
+    implementation ("io.ktor:ktor-client-cio:$ktorVersion")
 }
 
 compose.desktop {
