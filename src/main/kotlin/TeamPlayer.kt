@@ -46,12 +46,12 @@ val redStateMap = mutableStateMapOf<Int, TeamPlayerDTO>()
 @Composable
 fun TeamPlayer() {
     teamPlayerWebsocketClient()
-    val teamPlayerDTO = TeamPlayerDTO()
-    teamPlayerDTO.gold = BigDecimal(1432.54)
-    teamPlayerDTO.uname = "友人Abandon友人Abandon"
-    teamPlayerDTO.avatarUrl = "https://i1.hdslb.com/bfs/face/8dcda8cc51f125f739d0defb5d6e943a66e55669.jpg"
-    blueStateMap[1] = teamPlayerDTO
-    redStateMap[1] = teamPlayerDTO
+//    val teamPlayerDTO = TeamPlayerDTO()
+//    teamPlayerDTO.gold = BigDecimal(1432.54)
+//    teamPlayerDTO.uname = "友人Abandon友人Abandon"
+//    teamPlayerDTO.avatarUrl = "https://i1.hdslb.com/bfs/face/8dcda8cc51f125f739d0defb5d6e943a66e55669.jpg"
+//    blueStateMap[1] = teamPlayerDTO
+//    redStateMap[1] = teamPlayerDTO
     Column(
         modifier = Modifier.fillMaxHeight().fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
@@ -200,47 +200,48 @@ fun HorizontalLine(color: Color) {
 
 @Composable
 fun teamPlayerWebsocketClient() {
-    LaunchedEffect(true) {
+    val connectionAttemptCount = remember { mutableStateOf(0) }
+
+    LaunchedEffect(connectionAttemptCount.value) {
         val client = HttpClient {
             install(WebSockets)
         }
 
-        var isConnected = false
+        try {
+            client.webSocket(
+                method = HttpMethod.Get,
+                host = "localhost",
+                port = 8080,
+                path = "/websocket/plugin/2"
+            ) {
+                println("Connected to server.")
 
-        while (!isConnected) {
-            try {
-                client.webSocket(
-                    method = HttpMethod.Get,
-                    host = "localhost",
-                    port = 8080,
-                    path = "/websocket/plugin/2"
-                ) {
-                    isConnected = true
-                    println("Connected to server.")
+                // 发送消息到服务器
+                send("Hello, server!")
 
-                    // 发送消息到服务器
-                    send("Hello, server!")
-
-                    // 接收服务器发送的消息
-                    for (frame in incoming) {
-                        frame as? Frame.Text ?: continue
-                        val receivedText = frame.readText()
-                        println("Received message: $receivedText")
-                        handleWebSocketMessage(receivedText)
-                    }
+                // 接收服务器发送的消息
+                for (frame in incoming) {
+                    frame as? Frame.Text ?: continue
+                    val receivedText = frame.readText()
+                    println("Received message: $receivedText")
+                    handleMessage(receivedText)
                 }
-                client.close()
-            } catch (e: Throwable) {
-                println("Connection attempt failed: ${e.message}")
-                isConnected = false
-                delay(8000)
             }
+        } catch (e: Throwable) {
+            println("Connection attempt failed: ${e.message}")
+            delay(8000)
+            connectionAttemptCount.value++
+        } finally {
+            client.close()
+            delay(8000)
+            // 当服务端关闭后尝试重连
+            // 通过改变 connectionAttemptCount 的值让旧的协程被取消,新的协程被启动
+            connectionAttemptCount.value++
         }
-
     }
 }
 
-fun handleWebSocketMessage(receivedText: String) {
+fun handleMessage(receivedText: String) {
     val jsonArray: JSONArray = JSON.parseArray(receivedText)
 
     for (i in 0 until jsonArray.size) {
