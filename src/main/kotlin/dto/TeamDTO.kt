@@ -3,7 +3,7 @@ package dto
 import lombok.Data
 
 /**
- * @author wwg
+ * @author jankinwu
  * @description
  * @date 2024/3/18 23:49
  */

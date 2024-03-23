@@ -1,8 +1,3 @@
-/**
- * @description
- * @author      jankinwu
- * @date        2024/3/14 22:23
- */
 
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
@@ -15,6 +10,11 @@ import org.succlz123.lib.imageloader.ImageRes
 import org.succlz123.lib.imageloader.core.ImageCallback
 
 
+/**
+ * @description
+ * @author      jankinwu
+ * @date        2024/3/14 22:23
+ */
 @Composable
 fun AsyncImage(
     modifier: Modifier,
@@ -98,3 +98,5 @@ fun AsyncImage(
         })
     }
 }
+
+

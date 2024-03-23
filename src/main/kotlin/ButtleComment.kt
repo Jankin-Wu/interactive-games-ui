@@ -1,5 +1,6 @@
 import androidx.compose.animation.core.*
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -17,38 +18,103 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.ktor.client.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.http.*
-import io.ktor.websocket.*
+import com.alibaba.fastjson2.JSON
+import com.lt.load_the_image.rememberImagePainter
+import dto.BulletCommentMsgDTO
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 
 /**
  * @description
  * @author      jankinwu
  * @date        2024/3/17 15:01
  */
+
+val bulletCommentState = mutableStateOf(BulletCommentMsgDTO())
+
+val lock = Mutex()
+val queue = Channel<BulletCommentMsgDTO>(capacity = 100)
+
 @Preview
 @Composable
-fun App(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
-    val infiniteTransition = rememberInfiniteTransition()
-    val scrollSpeedRatio = 5.0
-    val currentScrollSpeed by remember { mutableStateOf(windowWidth * scrollSpeedRatio / 100000 ) }
+fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
+//    val infiniteTransition = rememberInfiniteTransition()
+    val scrollSpeedRatio = 10.0
+    val currentScrollSpeed by remember { mutableStateOf(windowWidth * scrollSpeedRatio / 100000) }
     var textWidth by remember { mutableStateOf(windowWidth.toFloat()) }
     var imageWidth by remember { mutableStateOf(0f) }
-    val spacerWidth = 8
+    val spacerWidth = 5
     val composableHeight by remember { mutableStateOf(windowHeight) }
     var maxOffset by remember { mutableStateOf(windowWidth.toFloat() + textWidth) }
-    var text by remember { mutableStateOf("") }
-    val offsetX by infiniteTransition.animateValue(
-        initialValue = maxOffset,
-        targetValue = -maxOffset,
-        typeConverter = Float.VectorConverter,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = (textWidth / currentScrollSpeed).toInt(), delayMillis = 0, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        )
-    )
+    val bulletCommentDTOState by remember { mutableStateOf(bulletCommentState) }
+    var textToDisplay by remember { mutableStateOf("") }
+    var avatarToDisplay by remember { mutableStateOf("") }
+    var isFirstToQueue by remember { mutableStateOf(true) }
+    val durationMillisState by remember { mutableStateOf((textWidth / currentScrollSpeed).toInt()) }
+    var moveToLeft by remember { mutableStateOf(false) }
+    val transition = updateTransition(targetState = moveToLeft)
+    val offsetTransition = transition.animateValue(
+        Offset.VectorConverter,
+        transitionSpec = {
+            if (moveToLeft) {
+                tween(durationMillis = durationMillisState, easing = LinearEasing)
+            } else {
+                snap()
+            }
+        },
+        label = "ValueAnimation",
+        targetValueByState = { state ->
+            if (state) {
+                Offset(-maxOffset, 0F)
+            } else {
+                Offset(maxOffset, 0F)
+            }
+        })
+    var currentTask by remember { mutableStateOf<Boolean?>(false) }
+
+    // 将消息加入队列
+    LaunchedEffect(bulletCommentDTOState.value) {
+        if (!isFirstToQueue) {
+            launch {
+                bulletCommentDTOState.let { value ->
+                    queue.send(value.value)
+                }
+            }
+            println("send queue: $queue")
+        }
+        isFirstToQueue = false
+    }
+
+    // 消费队列
+    LaunchedEffect(Unit) {
+        while (true) {
+            println("consume queue: $queue")
+            if (lock.tryLock()) { // 尝试获取互斥锁
+                try {
+                    if (currentTask == false) {
+                        println("consume queue1: $queue")
+                        val item = queue.receive()
+                        println("consume queue2: $queue")
+                        currentTask = true
+                        textToDisplay = item.text
+                        avatarToDisplay = item.avatarUrl.toString()
+                        moveToLeft = true
+                        // 在动画的持续时间加100毫秒，避免因为动画达到临界时间时切换状态导致动画一闪而过的问题
+                        delay(durationMillisState.toLong() + 100)
+                        moveToLeft = false
+                        currentTask = false
+                    }
+                } catch (e: Exception) {
+//                println(e)
+                } finally {
+                    lock.unlock() // 释放互斥锁
+                }
+            }
+            delay(1000)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -59,7 +125,7 @@ fun App(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = offsetX.dp)
+                .offset(x = offsetTransition.value.x.dp)
         ) {
             // 圆形头像框
             Box(
@@ -68,13 +134,20 @@ fun App(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
                     .background(Color.Transparent, shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
+//                AsyncImage(
+//                    modifier = Modifier
+//                        .onSizeChanged { imageWidth = it.width.toFloat() }
+//                        .clip(CircleShape),
+//                    url = avatarToDisplay,
+//                    placeHolderUrl = "image/prprpr.gif",
+//                    errorUrl = "image/tiqiang.gif"
+//                )
+                Image(
+                    painter = rememberImagePainter(avatarToDisplay),
+                    contentDescription = "",
                     modifier = Modifier
                         .onSizeChanged { imageWidth = it.width.toFloat() }
                         .clip(CircleShape),
-                    url = "https://i1.hdslb.com/bfs/face/8dcda8cc51f125f739d0defb5d6e943a66e55669.jpg",
-                    placeHolderUrl = "image/prprpr.gif",
-                    errorUrl = "image/tiqiang.gif"
                 )
             }
 
@@ -82,8 +155,8 @@ fun App(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
 
 
             Text(
-                text = "这是一条循环滚动的弹幕啦啦啦啦啦asddfASDDFD",
-                color = Color.White,
+                text = textToDisplay,
+                color = Color(bulletCommentDTOState.value.fill),
                 fontFamily = FontFamily.Monospace,
                 fontSize = (composableHeight / 3 * 2).sp,
                 softWrap = false,
@@ -91,58 +164,24 @@ fun App(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
                 style = TextStyle(
 //                    textDecoration = TextDecoration.Underline,
                     shadow = Shadow(
-                        color = Color.Black,
+                        color = Color(bulletCommentDTOState.value.stroke),
                         offset = Offset(2f, 2f),
                         blurRadius = 2f
                     )
                 ),
                 onTextLayout = { layoutResult ->
                     textWidth = layoutResult.size.width.toFloat()
-                    maxOffset = windowWidth.toFloat() + textWidth.toFloat() + imageWidth + spacerWidth
+                    maxOffset = windowWidth.toFloat() + textWidth
                 },
                 modifier = Modifier
                     .widthIn(min = textWidth.dp)
-//                    .width(textWidth.dp)
             )
         }
     }
-    websocketClient()
 }
 
-@Composable
-fun websocketClient() {
-    LaunchedEffect(true) {
-        val client = HttpClient {
-            install(WebSockets)
-        }
-
-        var isConnected = false
-
-        while (!isConnected) {
-            try {
-                client.webSocket(method = HttpMethod.Get, host = "localhost", port = 8080, path = "/websocket/plugin/1") {
-                    isConnected = true
-                    println("Connected to server.")
-
-                    // 发送消息到服务器
-                    send("Hello, server!")
-
-                    // 接收服务器发送的消息
-                    for (frame in incoming) {
-                        frame as? Frame.Text ?: continue
-                        val receivedText = frame.readText()
-                        println("Received message: $receivedText")
-                    }
-                }
-            } catch (e: Throwable) {
-                println("Connection attempt failed: ${e.message}")
-                isConnected = false
-                delay(8000)
-            }
-        }
-
-        client.close()
-    }
-
-
+fun handleBulletMsg(data: String) {
+    val bulletCommentMsg = JSON.parseObject(data, BulletCommentMsgDTO::class.java)
+    bulletCommentState.value = bulletCommentMsg
 }
+

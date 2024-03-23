@@ -17,4 +17,8 @@ class TeamPlayerDTO {
     var avatarUrl: String? = null
 
     var gold: BigDecimal? = null
+
+    var refreshIntervalMs: Long? = null
+
+    var refreshFlag: Long? = null
 }
