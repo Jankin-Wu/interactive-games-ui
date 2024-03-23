@@ -125,9 +125,19 @@ fun WebsocketClient() {
 }
 
 fun disPlayState(text: String, imageUrl: String) {
+    disPlayState(text, imageUrl, 0xFFFFFFFF)
+}
+
+fun disPlayState(text: String, imageUrl: String, fillColor: Long) {
+    disPlayState(text, imageUrl, fillColor, 0xFF000000)
+}
+
+fun disPlayState(text: String, imageUrl: String, fillColor: Long, stroke: Long) {
     val bulletCommentMsgDTO = BulletCommentMsgDTO()
     bulletCommentMsgDTO.avatarUrl = imageUrl
     bulletCommentMsgDTO.text = text
+    bulletCommentMsgDTO.fill = fillColor
+    bulletCommentMsgDTO.stroke = stroke
     bulletCommentState.value = bulletCommentMsgDTO
 }
 

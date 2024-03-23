@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alibaba.fastjson2.JSON
+import com.alibaba.fastjson2.JSONObject
 import com.lt.load_the_image.rememberImagePainter
 import dto.BulletCommentMsgDTO
 import kotlinx.coroutines.channels.Channel
@@ -41,18 +42,20 @@ val queue = Channel<BulletCommentMsgDTO>(capacity = 100)
 @Composable
 fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
 //    val infiniteTransition = rememberInfiniteTransition()
-    val scrollSpeedRatio = 10.0
+    val scrollSpeedRatio = 5.0
     val currentScrollSpeed by remember { mutableStateOf(windowWidth * scrollSpeedRatio / 100000) }
     var textWidth by remember { mutableStateOf(windowWidth.toFloat()) }
     var imageWidth by remember { mutableStateOf(0f) }
     val spacerWidth = 5
     val composableHeight by remember { mutableStateOf(windowHeight) }
-    var maxOffset by remember { mutableStateOf(windowWidth.toFloat() + textWidth) }
+    var maxOffset by remember { mutableStateOf(windowWidth.toFloat()) }
+    val contentFullWith by remember { mutableStateOf(textWidth + imageWidth + spacerWidth) }
     val bulletCommentDTOState by remember { mutableStateOf(bulletCommentState) }
     var textToDisplay by remember { mutableStateOf("") }
     var avatarToDisplay by remember { mutableStateOf("") }
+    var textColor by remember { mutableStateOf(0) }
     var isFirstToQueue by remember { mutableStateOf(true) }
-    val durationMillisState by remember { mutableStateOf((textWidth / currentScrollSpeed).toInt()) }
+    val durationMillisState by remember { mutableStateOf((maxOffset / currentScrollSpeed).toInt()) }
     var moveToLeft by remember { mutableStateOf(false) }
     val transition = updateTransition(targetState = moveToLeft)
     val offsetTransition = transition.animateValue(
@@ -69,39 +72,47 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
             if (state) {
                 Offset(-maxOffset, 0F)
             } else {
-                Offset(maxOffset, 0F)
+                Offset(contentFullWith, 0F)
             }
         })
     var currentTask by remember { mutableStateOf<Boolean?>(false) }
-
+    var queueSize by remember { mutableStateOf(0) }
     // 将消息加入队列
     LaunchedEffect(bulletCommentDTOState.value) {
         if (!isFirstToQueue) {
             launch {
                 bulletCommentDTOState.let { value ->
                     queue.send(value.value)
+                    queueSize++
+                    println("queue size: $queueSize")
                 }
             }
-            println("send queue: $queue")
         }
-        isFirstToQueue = false
     }
 
     // 消费队列
     LaunchedEffect(Unit) {
         while (true) {
-            println("consume queue: $queue")
-            if (lock.tryLock()) { // 尝试获取互斥锁
+            if (isFirstToQueue) {
+                isFirstToQueue = false
+                continue
+            }
+            // 尝试获取互斥锁
+            if (lock.tryLock()) {
                 try {
                     if (currentTask == false) {
-                        println("consume queue1: $queue")
                         val item = queue.receive()
-                        println("consume queue2: $queue")
+                        println("consume msg: ${JSONObject.toJSONString(item)}")
+                        queueSize--
+                        println("queue size: $queueSize")
                         currentTask = true
+//                        disPlayState(item.text, item.avatarUrl.toString())
                         textToDisplay = item.text
                         avatarToDisplay = item.avatarUrl.toString()
+                        textColor = item.fill.toInt()
+
                         moveToLeft = true
-                        // 在动画的持续时间加100毫秒，避免因为动画达到临界时间时切换状态导致动画一闪而过的问题
+                        // 在动画的持续时间基础上加100毫秒，避免因为动画达到临界时间时切换状态导致动画一闪而过的问题
                         delay(durationMillisState.toLong() + 100)
                         moveToLeft = false
                         currentTask = false
@@ -112,7 +123,7 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
                     lock.unlock() // 释放互斥锁
                 }
             }
-            delay(1000)
+            delay(400)
         }
     }
 
@@ -156,7 +167,7 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
 
             Text(
                 text = textToDisplay,
-                color = Color(bulletCommentDTOState.value.fill),
+                color = Color(textColor),
                 fontFamily = FontFamily.Monospace,
                 fontSize = (composableHeight / 3 * 2).sp,
                 softWrap = false,
