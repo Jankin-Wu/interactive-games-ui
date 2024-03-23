@@ -54,7 +54,6 @@ fun main() = application {
         transparent = true,
         undecorated = true,
     ) {
-
         windowWidth = this.window.size.width
         windowHeight = this.window.size.height
         WindowDraggableArea(

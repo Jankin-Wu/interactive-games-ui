@@ -44,11 +44,12 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
 //    val infiniteTransition = rememberInfiniteTransition()
     val scrollSpeedRatio = 5.0
     val currentScrollSpeed by remember { mutableStateOf(windowWidth * scrollSpeedRatio / 100000) }
+    val windowWidthState by remember { mutableStateOf(windowWidth) }
     var textWidth by remember { mutableStateOf(windowWidth.toFloat()) }
     var imageWidth by remember { mutableStateOf(0f) }
     val spacerWidth = 5
     val composableHeight by remember { mutableStateOf(windowHeight) }
-    var maxOffset by remember { mutableStateOf(windowWidth.toFloat()) }
+    var maxOffset by remember { mutableStateOf(windowWidthState.toFloat()) }
     val contentFullWith by remember { mutableStateOf(textWidth + imageWidth + spacerWidth) }
     val bulletCommentDTOState by remember { mutableStateOf(bulletCommentState) }
     var textToDisplay by remember { mutableStateOf("") }
@@ -58,6 +59,15 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
     val durationMillisState by remember { mutableStateOf((maxOffset / currentScrollSpeed).toInt()) }
     var moveToLeft by remember { mutableStateOf(false) }
     val transition = updateTransition(targetState = moveToLeft)
+    val targetOffset by derivedStateOf {
+//        println(windowWidth)
+        maxOffset = if (windowWidthState < contentFullWith) {
+            windowWidthState + contentFullWith
+        } else {
+            windowWidthState.toFloat()
+        }
+        Offset(-maxOffset, 0F)
+    }
     val offsetTransition = transition.animateValue(
         Offset.VectorConverter,
         transitionSpec = {
@@ -70,7 +80,8 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
         label = "ValueAnimation",
         targetValueByState = { state ->
             if (state) {
-                Offset(-maxOffset, 0F)
+//                Offset(-maxOffset, 0F)
+                targetOffset
             } else {
                 Offset(contentFullWith, 0F)
             }
@@ -110,7 +121,12 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
                         textToDisplay = item.text
                         avatarToDisplay = item.avatarUrl.toString()
                         textColor = item.fill.toInt()
-
+//                        maxOffset = if (windowWidth < contentFullWith) {
+//                            windowWidth + contentFullWith
+//                        } else {
+//                            windowWidth.toFloat()
+//                        }
+                        delay(100)
                         moveToLeft = true
                         // 在动画的持续时间基础上加100毫秒，避免因为动画达到临界时间时切换状态导致动画一闪而过的问题
                         delay(durationMillisState.toLong() + 100)
