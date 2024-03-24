@@ -8,7 +8,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
@@ -20,6 +19,7 @@ import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.http.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import java.awt.Dimension
 import java.awt.Toolkit
@@ -82,8 +82,9 @@ fun getScreenHeight(): Int {
 
 @Composable
 fun WebsocketClient() {
-    val connectionAttemptCount = remember { mutableStateOf(0) }
-    LaunchedEffect(connectionAttemptCount.value) {
+    var connectionAttemptState by remember { mutableStateOf(0) }
+    var connectionAttemptCount by remember { mutableStateOf(0) }
+    LaunchedEffect(connectionAttemptState) {
         val client = HttpClient {
             install(WebSockets)
         }
@@ -96,10 +97,14 @@ fun WebsocketClient() {
                 path = "/websocket/plugin/3"
             ) {
                 println("Connected to server.")
+                // 清空消息队列中的失败信息
+                queue.cancel()
+                queueSize = 0
+                queue = Channel(capacity = 100)
                 disPlayState("已成功连接至弹幕-按键映射器", "image/laugh.png")
                 // 发送消息到服务器
                 send("Hello, server!")
-
+                connectionAttemptCount = 0
                 // 接收服务器发送的消息
                 for (frame in incoming) {
                     frame as? Frame.Text ?: continue
@@ -110,17 +115,18 @@ fun WebsocketClient() {
             }
         } catch (e: Throwable) {
             println("Connection attempt failed: ${e.message}")
-            if (connectionAttemptCount.value == 0) {
-                disPlayState("连接弹幕-按键映射器失败, 即将尝试重新连接。。。", "image/cry.png")
-            } else {
-                disPlayState("第${connectionAttemptCount.value}次重新尝试连接弹幕-按键映射器失败", "image/cry.png")
-            }
         } finally {
             client.close()
+            if (connectionAttemptCount == 0) {
+                disPlayState("连接弹幕-按键映射器失败, 即将尝试重新连接。。。", "image/cry.png")
+            } else {
+                disPlayState("第${connectionAttemptCount}次重新尝试连接弹幕-按键映射器失败", "image/cry.png")
+            }
             delay(15000)
             // 当服务端关闭后尝试重连
             // 通过改变 connectionAttemptCount 的值让旧的协程被取消,新的协程被启动
-            connectionAttemptCount.value++
+            connectionAttemptState++
+            connectionAttemptCount++
         }
     }
 }

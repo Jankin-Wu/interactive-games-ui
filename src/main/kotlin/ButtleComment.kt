@@ -37,7 +37,8 @@ import kotlinx.coroutines.sync.Mutex
 val bulletCommentState = mutableStateOf(BulletCommentMsgDTO())
 
 val lock = Mutex()
-val queue = Channel<BulletCommentMsgDTO>(capacity = 100)
+var queue = Channel<BulletCommentMsgDTO>(capacity = 100)
+var queueSize = 0
 
 @Preview
 @Composable
@@ -90,7 +91,7 @@ fun BulletComment(windowWidth: Int, windowHeight: Int) {
             }
         })
     var currentTask by remember { mutableStateOf<Boolean?>(false) }
-    var queueSize by remember { mutableStateOf(0) }
+
     // 将消息加入队列
     LaunchedEffect(bulletCommentDTOState.value) {
         if (!isFirstToQueue) {
@@ -121,6 +122,7 @@ fun BulletComment(windowWidth: Int, windowHeight: Int) {
                         println("consume msg: ${JSONObject.toJSONString(item)}")
                         queueSize--
                         println("queue size: $queueSize")
+                        println("queue: $queue")
                         currentTask = true
 //                        disPlayState(item.text, item.avatarUrl.toString())
                         textToDisplay = item.text
