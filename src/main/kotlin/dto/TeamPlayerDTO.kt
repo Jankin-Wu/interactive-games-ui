@@ -1,6 +1,5 @@
 package dto
 
-import lombok.Data
 import java.math.BigDecimal
 
 /**
@@ -8,7 +7,6 @@ import java.math.BigDecimal
  * @description
  * @date 2024/3/18 11:18
  */
-@Data
 class TeamPlayerDTO {
     var uid: Int? = null
 

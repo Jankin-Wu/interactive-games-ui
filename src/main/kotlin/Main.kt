@@ -8,6 +8,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
@@ -56,13 +57,14 @@ fun main() = application {
     ) {
         windowWidth = this.window.size.width
         windowHeight = this.window.size.height
+//        Density().density
         WindowDraggableArea(
             Modifier
                 .fillMaxSize()
                 .clickable {}
         ) {
             WebsocketClient()
-            BulletComment(15000, windowWidth, 60)
+            BulletComment(windowWidth, 60)
             TeamPlayer()
         }
     }
@@ -115,7 +117,7 @@ fun WebsocketClient() {
             }
         } finally {
             client.close()
-            delay(10000)
+            delay(15000)
             // 当服务端关闭后尝试重连
             // 通过改变 connectionAttemptCount 的值让旧的协程被取消,新的协程被启动
             connectionAttemptCount.value++

@@ -52,7 +52,7 @@ fun TeamPlayer() {
     teamPlayerDTO.gold = BigDecimal(1432.54)
     teamPlayerDTO.uname = "友人Abandon友人Abandon"
     teamPlayerDTO.avatarUrl = "https://i1.hdslb.com/bfs/face/8dcda8cc51f125f739d0defb5d6e943a66e55669.jpg"
-    blueStateMap[1] = teamPlayerDTO
+//    blueStateMap[1] = teamPlayerDTO
 //    redStateMap[1] = teamPlayerDTO
     Column(
         modifier = Modifier.fillMaxHeight().fillMaxWidth(),
@@ -194,7 +194,7 @@ fun PlayerCard(data: TeamPlayerDTO, isLeftSide: Boolean) {
                 horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    "可用出兵次数：" + componentState.value.gold?.toBigInteger().toString(),
+                    "可用出兵点数：" + componentState.value.gold?.toBigInteger().toString(),
                     color = Color.White,
                     fontSize = 16.sp,
                     fontFamily = FontFamily.Monospace,

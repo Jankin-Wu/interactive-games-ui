@@ -1,0 +1,11 @@
+-dontwarn androidx.compose.desktop.DesktopTheme*
+-dontoptimize
+-keep class org.fife.** { *; }
+-dontnote org.fife.**
+-keep class sun.misc.Unsafe { *; }
+-dontnote sun.misc.Unsafe
+-keep class com.jetbrains.JBR* { *; }
+-dontnote com.jetbrains.JBR*
+-keep class com.sun.jna** { *; }
+-dontnote com.sun.jna**
+-keep java.util.function.**

@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -40,26 +41,27 @@ val queue = Channel<BulletCommentMsgDTO>(capacity = 100)
 
 @Preview
 @Composable
-fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: Int) {
+fun BulletComment(windowWidth: Int, windowHeight: Int) {
 //    val infiniteTransition = rememberInfiniteTransition()
-    val scrollSpeedRatio = 5.0
-    val currentScrollSpeed by remember { mutableStateOf(windowWidth * scrollSpeedRatio / 100000) }
-    val windowWidthState by remember { mutableStateOf(windowWidth) }
+    val scrollSpeedRatio = 9.0
+    val currentScrollSpeed by derivedStateOf { windowWidth * scrollSpeedRatio / 100000 }
+    var windowWidthState by remember { mutableStateOf(windowWidth) }
     var textWidth by remember { mutableStateOf(windowWidth.toFloat()) }
     var imageWidth by remember { mutableStateOf(0f) }
     val spacerWidth = 5
     val composableHeight by remember { mutableStateOf(windowHeight) }
     var maxOffset by remember { mutableStateOf(windowWidthState.toFloat()) }
-    val contentFullWith by remember { mutableStateOf(textWidth + imageWidth + spacerWidth) }
+    val contentFullWith by derivedStateOf { textWidth + imageWidth + spacerWidth }
     val bulletCommentDTOState by remember { mutableStateOf(bulletCommentState) }
     var textToDisplay by remember { mutableStateOf("") }
     var avatarToDisplay by remember { mutableStateOf("") }
     var textColor by remember { mutableStateOf(0) }
     var isFirstToQueue by remember { mutableStateOf(true) }
-    val durationMillisState by remember { mutableStateOf((maxOffset / currentScrollSpeed).toInt()) }
+    val durationMillisState by derivedStateOf { (maxOffset / currentScrollSpeed).toInt() }
     var moveToLeft by remember { mutableStateOf(false) }
     val transition = updateTransition(targetState = moveToLeft)
     val targetOffset by derivedStateOf {
+//        println("textWidth: $textWidth, contentFullWith: $contentFullWith")
 //        println(windowWidth)
         maxOffset = if (windowWidthState < contentFullWith) {
             windowWidthState + contentFullWith
@@ -83,6 +85,7 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
 //                Offset(-maxOffset, 0F)
                 targetOffset
             } else {
+
                 Offset(contentFullWith, 0F)
             }
         })
@@ -112,6 +115,8 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
             if (lock.tryLock()) {
                 try {
                     if (currentTask == false) {
+                        // 加延时，避免切换文本时一闪而过的问题
+                        delay(200)
                         val item = queue.receive()
                         println("consume msg: ${JSONObject.toJSONString(item)}")
                         queueSize--
@@ -121,15 +126,11 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
                         textToDisplay = item.text
                         avatarToDisplay = item.avatarUrl.toString()
                         textColor = item.fill.toInt()
-//                        maxOffset = if (windowWidth < contentFullWith) {
-//                            windowWidth + contentFullWith
-//                        } else {
-//                            windowWidth.toFloat()
-//                        }
-                        delay(100)
+//                        delay(200)
                         moveToLeft = true
                         // 在动画的持续时间基础上加100毫秒，避免因为动画达到临界时间时切换状态导致动画一闪而过的问题
                         delay(durationMillisState.toLong() + 100)
+                        println("durationMillis: $durationMillisState")
                         moveToLeft = false
                         currentTask = false
                     }
@@ -139,7 +140,7 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
                     lock.unlock() // 释放互斥锁
                 }
             }
-            delay(400)
+            delay(600)
         }
     }
 
@@ -147,11 +148,17 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 80.dp)
+            .onGloballyPositioned {
+                windowWidthState = it.size.width
+            }
+            .widthIn(min = textWidth.dp)
             .background(Color.Transparent)
     ) {
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
+                .wrapContentWidth()
+                .widthIn(min = textWidth.dp)
                 .offset(x = offsetTransition.value.x.dp)
         ) {
             // 圆形头像框
@@ -197,11 +204,14 @@ fun BulletComment(durationMillis: Int = 15000, windowWidth: Int, windowHeight: I
                     )
                 ),
                 onTextLayout = { layoutResult ->
-                    textWidth = layoutResult.size.width.toFloat()
-                    maxOffset = windowWidth.toFloat() + textWidth
+//                    textWidth = layoutResult.size.width.toFloat()
+                    textWidth = layoutResult.multiParagraph.width
+//                    maxOffset = windowWidth.toFloat() + textWidth
                 },
                 modifier = Modifier
-                    .widthIn(min = textWidth.dp)
+                    .background(Color.Transparent)
+                    .width(IntrinsicSize.Max)
+//                    .widthIn(min = textWidth.dp)
             )
         }
     }
