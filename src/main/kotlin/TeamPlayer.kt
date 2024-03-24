@@ -95,9 +95,9 @@ fun PlayerCard(data: TeamPlayerDTO, isLeftSide: Boolean) {
             .padding(16.dp)
             .height(80.dp)
             .width(200.dp)
-            .background(Color.Gray.copy(0.3f), shape = RoundedCornerShape(8.dp))
+            .background(Color.Gray.copy(0.5f), shape = RoundedCornerShape(8.dp))
             .border(
-                BorderStroke(2.dp, if (isLeftSide) Color.Blue.copy(alpha = 0.3f) else Color.Red.copy(alpha = 0.3f)),
+                BorderStroke(2.dp, if (isLeftSide) Color.Blue.copy(alpha = 0.5f) else Color.Red.copy(alpha = 0.5f)),
                 shape = RoundedCornerShape(8.dp)
             ),
     ) {
@@ -179,7 +179,7 @@ fun PlayerCard(data: TeamPlayerDTO, isLeftSide: Boolean) {
                             modifier = Modifier
                                 .fillMaxSize(),
                             progress = progress,
-                            color = if (isLeftSide) Color.Blue.copy(alpha = 0.3f) else Color.Red.copy(alpha = 0.3f),
+                            color = if (isLeftSide) Color.Blue.copy(alpha = 0.5f) else Color.Red.copy(alpha = 0.5f),
                             backgroundColor = Color.Transparent
                         )
                     }

@@ -42,18 +42,21 @@ var queueSize = 0
 
 @Preview
 @Composable
-fun BulletComment(windowWidth: Int, windowHeight: Int) {
+fun BulletComment(windowWidth: Int) {
 //    val infiniteTransition = rememberInfiniteTransition()
-    val scrollSpeedRatio = 9.0
-    val currentScrollSpeed by derivedStateOf { windowWidth * scrollSpeedRatio / 100000 }
+    val scrollSpeedRatio = 200.0
+    val currentScrollSpeed by derivedStateOf { scrollSpeedRatio / 1000 }
     var windowWidthState by remember { mutableStateOf(windowWidth) }
     var textWidth by remember { mutableStateOf(windowWidth.toFloat()) }
     var imageWidth by remember { mutableStateOf(0f) }
     val spacerWidth = 5
-    val composableHeight by remember { mutableStateOf(windowHeight) }
+//    val composableHeight by remember { mutableStateOf(windowHeight) }
     var maxOffset by remember { mutableStateOf(windowWidthState.toFloat()) }
     val contentFullWith by derivedStateOf { textWidth + imageWidth + spacerWidth }
     val bulletCommentDTOState by remember { mutableStateOf(bulletCommentState) }
+    var consumeBulletCommentDTOState by remember { mutableStateOf(BulletCommentMsgDTO()) }
+    var consumeRefreshFlag: Long by remember { mutableStateOf(0) }
+    var consumeCompletedFlag: Long by remember { mutableStateOf(0) }
     var textToDisplay by remember { mutableStateOf("") }
     var avatarToDisplay by remember { mutableStateOf("") }
     var textColor by remember { mutableStateOf(0) }
@@ -75,6 +78,7 @@ fun BulletComment(windowWidth: Int, windowHeight: Int) {
         Offset.VectorConverter,
         transitionSpec = {
             if (moveToLeft) {
+//                println("durationMillis_2: $durationMillisState")
                 tween(durationMillis = durationMillisState, easing = LinearEasing)
             } else {
                 snap()
@@ -90,7 +94,7 @@ fun BulletComment(windowWidth: Int, windowHeight: Int) {
                 Offset(contentFullWith, 0F)
             }
         })
-    var currentTask by remember { mutableStateOf<Boolean?>(false) }
+    var currentTask by remember { mutableStateOf<Boolean>(false) }
 
     // 将消息加入队列
     LaunchedEffect(bulletCommentDTOState.value) {
@@ -105,44 +109,58 @@ fun BulletComment(windowWidth: Int, windowHeight: Int) {
         }
     }
 
-    // 消费队列
+    // 更新弹幕协程
+    LaunchedEffect(consumeRefreshFlag) {
+        if (isFirstToQueue) {
+            return@LaunchedEffect
+        }
+        println("开始更新弹幕")
+        textToDisplay = consumeBulletCommentDTOState.text
+        avatarToDisplay = consumeBulletCommentDTOState.avatarUrl.toString()
+        textColor = consumeBulletCommentDTOState.fill.toInt()
+//                        delay(200)
+        moveToLeft = true
+        println("durationMillis_1: $durationMillisState")
+        // 在动画的持续时间基础上加延时，避免因为动画达到临界时间时切换状态导致动画一闪而过的问q21w题
+        delay(durationMillisState.toLong() + 200)
+        println("弹幕执行完毕")
+        moveToLeft = false
+        currentTask = false
+        consumeCompletedFlag++
+    }
+
+    // 消费队列协程
+    LaunchedEffect(consumeCompletedFlag) {
+        // 组件初始化时不执行任务
+        if (isFirstToQueue) {
+            isFirstToQueue = false
+            return@LaunchedEffect
+        }
+        if (!currentTask) {
+            println("开始消费队列")
+            val item = queue.receive()
+            currentTask = true
+            println("consume msg: ${JSONObject.toJSONString(item)}")
+            queueSize--
+            println("queue size: $queueSize")
+            consumeBulletCommentDTOState = item
+            consumeRefreshFlag++
+        }
+    }
+
+    // 看门狗协程
     LaunchedEffect(Unit) {
         while (true) {
-            if (isFirstToQueue) {
-                isFirstToQueue = false
-                continue
-            }
-            // 尝试获取互斥锁
-            if (lock.tryLock()) {
-                try {
-                    if (currentTask == false) {
-                        // 加延时，避免切换文本时一闪而过的问题
-                        delay(200)
-                        val item = queue.receive()
-                        println("consume msg: ${JSONObject.toJSONString(item)}")
-                        queueSize--
-                        println("queue size: $queueSize")
-                        println("queue: $queue")
-                        currentTask = true
-//                        disPlayState(item.text, item.avatarUrl.toString())
-                        textToDisplay = item.text
-                        avatarToDisplay = item.avatarUrl.toString()
-                        textColor = item.fill.toInt()
-//                        delay(200)
-                        moveToLeft = true
-                        // 在动画的持续时间基础上加100毫秒，避免因为动画达到临界时间时切换状态导致动画一闪而过的问题
-                        delay(durationMillisState.toLong() + 100)
-                        println("durationMillis: $durationMillisState")
-                        moveToLeft = false
-                        currentTask = false
-                    }
-                } catch (e: Exception) {
-//                println(e)
-                } finally {
-                    lock.unlock() // 释放互斥锁
+            // 双重检测，防止已经执行后再次启动消费协程
+            if (!currentTask && !moveToLeft) {
+                delay(2000)
+                if (!moveToLeft) {
+                    println("看门狗开始启动消费协程")
+                    consumeCompletedFlag++
                 }
+            } else {
+                delay(2000)
             }
-            delay(600)
         }
     }
 
@@ -166,7 +184,7 @@ fun BulletComment(windowWidth: Int, windowHeight: Int) {
             // 圆形头像框
             Box(
                 modifier = Modifier
-                    .size(composableHeight.dp)
+                    .size(40.dp)
                     .background(Color.Transparent, shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -194,7 +212,7 @@ fun BulletComment(windowWidth: Int, windowHeight: Int) {
                 text = textToDisplay,
                 color = Color(textColor),
                 fontFamily = FontFamily.Monospace,
-                fontSize = (composableHeight / 3 * 2).sp,
+                fontSize = (30).sp,
                 softWrap = false,
                 overflow = TextOverflow.Visible,
                 style = TextStyle(

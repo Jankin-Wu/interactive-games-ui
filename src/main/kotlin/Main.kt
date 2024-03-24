@@ -42,6 +42,8 @@ fun main() = application {
 
     var windowWidth by remember { mutableStateOf((getScreenWidth() / 2)) }
     var windowHeight by remember { mutableStateOf(getScreenHeight() / 2) }
+//    var windowWidth by remember { mutableStateOf(1920) }
+//    var windowHeight by remember { mutableStateOf(1080) }
     Window(
         onCloseRequest = ::exitApplication,
         title = "Bullet Comment",
@@ -64,7 +66,7 @@ fun main() = application {
                 .clickable {}
         ) {
             WebsocketClient()
-            BulletComment(windowWidth, 60)
+            BulletComment(windowWidth)
             TeamPlayer()
         }
     }
