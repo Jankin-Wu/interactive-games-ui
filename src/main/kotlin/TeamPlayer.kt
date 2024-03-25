@@ -1,6 +1,7 @@
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONArray
+import com.lt.load_the_image.rememberImagePainter
 import dto.TeamDTO
 import dto.TeamPlayerDTO
 import kotlinx.coroutines.delay
@@ -134,13 +136,21 @@ fun PlayerCard(data: TeamPlayerDTO, isLeftSide: Boolean) {
                     }
 //                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                AsyncImage(
+                Image(
+                    painter = rememberImagePainter(componentState.value.avatarUrl),
+                    contentDescription = "",
                     modifier = Modifier
                         .size(50.dp)
                         .padding(8.dp)
                         .clip(CircleShape),
-                    url = componentState.value.avatarUrl,
                 )
+//                AsyncImage(
+//                    modifier = Modifier
+//                        .size(50.dp)
+//                        .padding(8.dp)
+//                        .clip(CircleShape),
+//                    url = componentState.value.avatarUrl,
+//                )
                 if (!isLeftSide) {
 //                    Spacer(modifier = Modifier.height(8.dp))
                     componentState.value.uname?.let {

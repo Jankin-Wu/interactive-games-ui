@@ -62,15 +62,19 @@ fun BulletComment(windowWidth: Int) {
     var textColor by remember { mutableStateOf(0) }
     var isFirstToQueue by remember { mutableStateOf(true) }
     val durationMillisState by derivedStateOf { (maxOffset / currentScrollSpeed).toInt() }
+    var currentTask by remember { mutableStateOf<Boolean>(false) }
     var moveToLeft by remember { mutableStateOf(false) }
     val transition = updateTransition(targetState = moveToLeft)
     val targetOffset by derivedStateOf {
 //        println("textWidth: $textWidth, contentFullWith: $contentFullWith")
 //        println(windowWidth)
-        maxOffset = if (windowWidthState < contentFullWith) {
-            windowWidthState + contentFullWith
-        } else {
-            windowWidthState.toFloat()
+        // 在弹幕滚动时不更新偏移量，避免因为改变窗口大小导致弹幕消失
+        if (!currentTask) {
+            maxOffset = if (windowWidthState < contentFullWith) {
+                windowWidthState + contentFullWith
+            } else {
+                windowWidthState.toFloat()
+            }
         }
         Offset(-maxOffset, 0F)
     }
@@ -94,7 +98,6 @@ fun BulletComment(windowWidth: Int) {
                 Offset(contentFullWith, 0F)
             }
         })
-    var currentTask by remember { mutableStateOf<Boolean>(false) }
 
     // 将消息加入队列
     LaunchedEffect(bulletCommentDTOState.value) {
@@ -118,11 +121,10 @@ fun BulletComment(windowWidth: Int) {
         textToDisplay = consumeBulletCommentDTOState.text
         avatarToDisplay = consumeBulletCommentDTOState.avatarUrl.toString()
         textColor = consumeBulletCommentDTOState.fill.toInt()
-//                        delay(200)
         moveToLeft = true
         println("durationMillis_1: $durationMillisState")
-        // 在动画的持续时间基础上加延时，避免因为动画达到临界时间时切换状态导致动画一闪而过的问q21w题
-        delay(durationMillisState.toLong() + 200)
+        // 在动画的持续时间基础上加延时，避免因为动画达到临界时间时切换状态导致动画一闪而过的问题
+        delay(durationMillisState.toLong() + 500)
         println("弹幕执行完毕")
         moveToLeft = false
         currentTask = false
@@ -153,9 +155,9 @@ fun BulletComment(windowWidth: Int) {
         while (true) {
             // 双重检测，防止已经执行后再次启动消费协程
             if (!currentTask && !moveToLeft) {
-                delay(2000)
+                delay(1000)
                 if (!moveToLeft) {
-                    println("看门狗开始启动消费协程")
+                    println("看门狗尝试进行队列消费")
                     consumeCompletedFlag++
                 }
             } else {

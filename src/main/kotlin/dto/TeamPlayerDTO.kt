@@ -12,7 +12,7 @@ class TeamPlayerDTO {
 
     var uname: String? = null
 
-    var avatarUrl: String? = null
+    var avatarUrl: String = ""
 
     var gold: BigDecimal? = null
 
