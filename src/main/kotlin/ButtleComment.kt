@@ -52,7 +52,8 @@ fun BulletComment(windowWidth: Int) {
     val spacerWidth = 5
 //    val composableHeight by remember { mutableStateOf(windowHeight) }
     var maxOffset by remember { mutableStateOf(windowWidthState.toFloat()) }
-    val contentFullWith by derivedStateOf { textWidth + imageWidth + spacerWidth }
+    // 刚启动时会出现 textWidth 为0的情况，如果为0，则将 contentFullWith 设置为窗口宽度
+    val contentFullWith by derivedStateOf { if (textWidth.toInt() == 0)   windowWidth.toFloat() else  textWidth + imageWidth + spacerWidth }
     val bulletCommentDTOState by remember { mutableStateOf(bulletCommentState) }
     var consumeBulletCommentDTOState by remember { mutableStateOf(BulletCommentMsgDTO()) }
     var consumeRefreshFlag: Long by remember { mutableStateOf(0) }
