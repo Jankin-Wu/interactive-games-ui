@@ -26,7 +26,6 @@ import dto.BulletCommentMsgDTO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
 
 /**
  * @description
@@ -36,7 +35,6 @@ import kotlinx.coroutines.sync.Mutex
 
 val bulletCommentState = mutableStateOf(BulletCommentMsgDTO())
 
-val lock = Mutex()
 var queue = Channel<BulletCommentMsgDTO>(capacity = 100)
 var queueSize = 0
 
@@ -140,8 +138,8 @@ fun BulletComment(windowWidth: Int) {
             return@LaunchedEffect
         }
         if (!currentTask) {
-            println("开始消费队列")
             val item = queue.receive()
+            println("开始消费队列")
             currentTask = true
             println("consume msg: ${JSONObject.toJSONString(item)}")
             queueSize--

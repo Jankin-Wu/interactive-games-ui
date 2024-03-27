@@ -152,10 +152,10 @@ fun disPlayState(text: String, imageUrl: String, fillColor: Long, stroke: Long) 
 
 fun handleMessage(receivedText: String) {
     val jsonObject = JSONObject.parseObject(receivedText)
-    val pluginCode = jsonObject.getInteger("pluginItemCode")
+    val pluginItemCode = jsonObject.getInteger("pluginItemCode")
     val data = jsonObject.getString("data")
 
-    when (pluginCode) {
+    when (pluginItemCode) {
         1 -> handleBulletMsg(data)
         2 -> handlePlayCardMsg(data)
         else -> Unit
