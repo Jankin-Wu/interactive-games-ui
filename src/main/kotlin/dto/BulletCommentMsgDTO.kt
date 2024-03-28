@@ -1,10 +1,13 @@
 package dto
 
+import kotlinx.serialization.Serializable
+
 /**
  * @author jankinwu
  * @description
  * @date 2024/3/9 2:59
  */
+@Serializable
 class BulletCommentMsgDTO {
     var text: String = ""
     var fontSize: String = "40"

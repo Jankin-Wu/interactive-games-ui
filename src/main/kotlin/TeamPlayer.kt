@@ -23,13 +23,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alibaba.fastjson2.JSON
-import com.alibaba.fastjson2.JSONArray
 import com.lt.load_the_image.rememberImagePainter
 import dto.TeamDTO
 import dto.TeamPlayerDTO
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
+import kotlinx.serialization.json.Json
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.collections.component1
@@ -144,13 +141,6 @@ fun PlayerCard(data: TeamPlayerDTO, isLeftSide: Boolean) {
                         .padding(8.dp)
                         .clip(CircleShape),
                 )
-//                AsyncImage(
-//                    modifier = Modifier
-//                        .size(50.dp)
-//                        .padding(8.dp)
-//                        .clip(CircleShape),
-//                    url = componentState.value.avatarUrl,
-//                )
                 if (!isLeftSide) {
 //                    Spacer(modifier = Modifier.height(8.dp))
                     componentState.value.uname?.let {
@@ -221,53 +211,6 @@ fun PlayerCard(data: TeamPlayerDTO, isLeftSide: Boolean) {
     }
 }
 
-@Composable
-fun HorizontalLine(color: Color) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp)
-            .height(2.dp)
-            .background(color)
-    )
-}
-
-@Preview
-@Composable
-fun progress(color: Color, refreshIntervalMs: Long, refreshFlag: Long?, gold: BigDecimal) {
-    var progress by remember { mutableStateOf(0f) }
-    var goldState by remember { mutableStateOf(gold) }
-    val refreshIntervalMsState by remember { mutableStateOf(refreshIntervalMs) }
-    var refreshFlagState by remember { mutableStateOf(refreshFlag) }
-    val coroutineScope = rememberCoroutineScope()
-
-    MaterialTheme {
-        Box(
-            modifier = Modifier
-                .height(2.dp)
-                .padding(start = 20.dp, end = 20.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxSize(),
-                progress = progress,
-                color = color,
-                backgroundColor = Color.Transparent
-            )
-            LaunchedEffect(goldState, refreshIntervalMsState) {
-                while (isActive) {
-                    goldState = gold
-                    progress = goldState.remainder(BigDecimal.ONE).toFloat()
-                    delay(refreshIntervalMsState)
-                }
-            }
-
-
-        }
-    }
-}
-
 fun processMapChanges(teamMap: MutableMap<Int, TeamPlayerDTO>, playerList: List<TeamPlayerDTO>?, team: String) {
     val uids = playerList?.map { it.uid }?.toSet() ?: emptySet()
 
@@ -298,18 +241,29 @@ fun updateComponentData(id: Int, playerDTO: TeamPlayerDTO, teamName: String) {
 }
 
 fun handlePlayCardMsg(data: String) {
-    val jsonArray: JSONArray = JSON.parseArray(data)
-
-    for (i in 0 until jsonArray.size) {
-        val teamDTO: TeamDTO = JSON.parseObject(jsonArray.getJSONObject(i).toJSONString(), TeamDTO::class.java)
-        val team = teamDTO.name
-        val playerList = teamDTO.players
+//    val jsonArray: JSONArray = JSON.parseArray(data)
+    val teamDTOList = Json.decodeFromString<List<TeamDTO>>(data);
+    teamDTOList.forEach {
+        val team = it.name
+        val playerList = it.players
 
         val (teamMap, _) = when (team) {
             blueTeam -> Pair(blueStateMap, redStateMap)
             redTeam -> Pair(redStateMap, blueStateMap)
-            else -> continue
+            else -> return@forEach
         }
         processMapChanges(teamMap, playerList, team)
     }
+//    for (i in 0 until jsonArray.size) {
+//        val teamDTO: TeamDTO = JSON.parseObject(jsonArray.getJSONObject(i).toJSONString(), TeamDTO::class.java)
+//        val team = teamDTO.name
+//        val playerList = teamDTO.players
+//
+//        val (teamMap, _) = when (team) {
+//            blueTeam -> Pair(blueStateMap, redStateMap)
+//            redTeam -> Pair(redStateMap, blueStateMap)
+//            else -> continue
+//        }
+//        processMapChanges(teamMap, playerList, team)
+//    }
 }

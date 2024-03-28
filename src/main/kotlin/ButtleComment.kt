@@ -19,13 +19,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alibaba.fastjson2.JSON
-import com.alibaba.fastjson2.JSONObject
 import com.lt.load_the_image.rememberImagePainter
 import dto.BulletCommentMsgDTO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 /**
  * @description
@@ -61,7 +60,7 @@ fun BulletComment(windowWidth: Int) {
     var textColor by remember { mutableStateOf(0) }
     var isFirstToQueue by remember { mutableStateOf(true) }
     val durationMillisState by derivedStateOf { (maxOffset / currentScrollSpeed).toInt() }
-    var currentTask by remember { mutableStateOf<Boolean>(false) }
+    var currentTask by remember { mutableStateOf(false) }
     var moveToLeft by remember { mutableStateOf(false) }
     val transition = updateTransition(targetState = moveToLeft)
     val targetOffset by derivedStateOf {
@@ -141,7 +140,7 @@ fun BulletComment(windowWidth: Int) {
             val item = queue.receive()
             println("开始消费队列")
             currentTask = true
-            println("consume msg: ${JSONObject.toJSONString(item)}")
+            println("consume msg: ${Json.encodeToString(BulletCommentMsgDTO.serializer(), item)}")
             queueSize--
             println("queue size: $queueSize")
             consumeBulletCommentDTOState = item
@@ -189,14 +188,6 @@ fun BulletComment(windowWidth: Int) {
                     .background(Color.Transparent, shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-//                AsyncImage(
-//                    modifier = Modifier
-//                        .onSizeChanged { imageWidth = it.width.toFloat() }
-//                        .clip(CircleShape),
-//                    url = avatarToDisplay,
-//                    placeHolderUrl = "image/prprpr.gif",
-//                    errorUrl = "image/tiqiang.gif"
-//                )
                 Image(
                     painter = rememberImagePainter(avatarToDisplay),
                     contentDescription = "",
@@ -239,7 +230,8 @@ fun BulletComment(windowWidth: Int) {
 }
 
 fun handleBulletMsg(data: String) {
-    val bulletCommentMsg = JSON.parseObject(data, BulletCommentMsgDTO::class.java)
+    val bulletCommentMsg = Json.decodeFromString<BulletCommentMsgDTO>(data)
+//    val bulletCommentMsg = JSON.parseObject(data, BulletCommentMsgDTO::class.java)
     bulletCommentState.value = bulletCommentMsg
 }
 

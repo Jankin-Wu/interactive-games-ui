@@ -1,5 +1,7 @@
 package dto
 
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 
 /**
@@ -7,6 +9,7 @@ import java.math.BigDecimal
  * @description
  * @date 2024/3/18 11:18
  */
+@Serializable
 class TeamPlayerDTO {
     var uid: Int? = null
 
@@ -14,6 +17,7 @@ class TeamPlayerDTO {
 
     var avatarUrl: String = ""
 
+    @Contextual
     var gold: BigDecimal? = null
 
     var refreshIntervalMs: Long? = null

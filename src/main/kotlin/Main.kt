@@ -13,7 +13,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import com.alibaba.fastjson2.JSONObject
 import dto.BulletCommentMsgDTO
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
@@ -21,6 +20,8 @@ import io.ktor.http.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import java.awt.Dimension
 import java.awt.Toolkit
 
@@ -151,9 +152,9 @@ fun disPlayState(text: String, imageUrl: String, fillColor: Long, stroke: Long) 
 }
 
 fun handleMessage(receivedText: String) {
-    val jsonObject = JSONObject.parseObject(receivedText)
-    val pluginItemCode = jsonObject.getInteger("pluginItemCode")
-    val data = jsonObject.getString("data")
+    val jsonElement = Json.parseToJsonElement(receivedText)
+    val pluginItemCode = jsonElement.jsonObject["pluginItemCode"].toString().toInt()
+    val data = jsonElement.jsonObject["data"].toString()
 
     when (pluginItemCode) {
         1 -> handleBulletMsg(data)

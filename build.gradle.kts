@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm")
     id("org.jetbrains.compose")
+    kotlin("plugin.serialization") version "1.5.31"
 }
 
 
@@ -54,17 +55,12 @@ dependencies {
 //    implementation("io.coil-kt.coil3:coil-core:$coil3Version")
 //    implementation("io.coil-kt.coil3:coil-network-ktor:$coil3Version")
 //    implementation("io.coil-kt.coil3:coil3:coil-gif:$coil3Version")
-//    implementation("org.projectlombok:lombok:1.18.30")
-    implementation("com.alibaba.fastjson2:fastjson2:2.0.40")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutineVersion")
     implementation ("io.ktor:ktor-client-core:$ktorVersion")
     implementation ("io.ktor:ktor-client-websockets:$ktorVersion")
     implementation ("io.ktor:ktor-client-cio:$ktorVersion")
-//    implementation ("org.jetbrains.skiko:skiko-jvm:0.6.7")
     implementation("com.github.ltttttttttttt:load-the-image:1.0.8")
-//    implementation ("org.jetbrains.skija:skija-shared:$skijaVersion")
-//    implementation ("org.jetbrains.skija:skija-windows:$skijaVersion")
 }
 
 compose.desktop {

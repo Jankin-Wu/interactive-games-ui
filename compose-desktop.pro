@@ -8,4 +8,7 @@
 -dontnote com.jetbrains.JBR*
 -keep class com.sun.jna** { *; }
 -dontnote com.sun.jna**
--keep java.util.function.**
+-dontwarn org.slf4j**
+-keep class org.slf4j** { *; }
+-dontnote org.jetbrains.skiko**
+-keep class org.jetbrains.skiko** { *; }
