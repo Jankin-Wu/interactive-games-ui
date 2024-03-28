@@ -231,7 +231,6 @@ fun BulletComment(windowWidth: Int) {
 
 fun handleBulletMsg(data: String) {
     val bulletCommentMsg = Json.decodeFromString<BulletCommentMsgDTO>(data)
-//    val bulletCommentMsg = JSON.parseObject(data, BulletCommentMsgDTO::class.java)
     bulletCommentState.value = bulletCommentMsg
 }
 

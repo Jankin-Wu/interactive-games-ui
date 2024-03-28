@@ -14,7 +14,7 @@ import java.math.BigDecimal
 
 /**
  * @description
- * @author      wwg
+ * @author      jankinwu
  * @date        2024/3/28 11:05
  */
 class BigDecimalSerializer : KSerializer<BigDecimal>{

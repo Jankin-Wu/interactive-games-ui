@@ -241,8 +241,7 @@ fun updateComponentData(id: Int, playerDTO: TeamPlayerDTO, teamName: String) {
 }
 
 fun handlePlayCardMsg(data: String) {
-//    val jsonArray: JSONArray = JSON.parseArray(data)
-    val teamDTOList = Json.decodeFromString<List<TeamDTO>>(data);
+    val teamDTOList = Json.decodeFromString<List<TeamDTO>>(data)
     teamDTOList.forEach {
         val team = it.name
         val playerList = it.players
@@ -254,16 +253,4 @@ fun handlePlayCardMsg(data: String) {
         }
         processMapChanges(teamMap, playerList, team)
     }
-//    for (i in 0 until jsonArray.size) {
-//        val teamDTO: TeamDTO = JSON.parseObject(jsonArray.getJSONObject(i).toJSONString(), TeamDTO::class.java)
-//        val team = teamDTO.name
-//        val playerList = teamDTO.players
-//
-//        val (teamMap, _) = when (team) {
-//            blueTeam -> Pair(blueStateMap, redStateMap)
-//            redTeam -> Pair(redStateMap, blueStateMap)
-//            else -> continue
-//        }
-//        processMapChanges(teamMap, playerList, team)
-//    }
 }
