@@ -1,3 +1,5 @@
+package component
+
 import androidx.compose.animation.core.*
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Image

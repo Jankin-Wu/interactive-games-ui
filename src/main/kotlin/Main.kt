@@ -13,6 +13,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import component.*
 import dto.BulletCommentMsgDTO
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
@@ -69,6 +70,8 @@ fun main() = application {
             WebsocketClient()
             BulletComment(windowWidth)
             TeamPlayer()
+
+            ChatBox()
         }
     }
 }

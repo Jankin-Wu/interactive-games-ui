@@ -17,7 +17,7 @@ import java.math.BigDecimal
  * @author      jankinwu
  * @date        2024/3/28 11:05
  */
-class BigDecimalSerializer : KSerializer<BigDecimal>{
+class BigDecimalSerializer : KSerializer<BigDecimal> {
     override val descriptor = PrimitiveSerialDescriptor("java.math.BigDecimal", PrimitiveKind.DOUBLE)
 
     /**
@@ -27,7 +27,7 @@ class BigDecimalSerializer : KSerializer<BigDecimal>{
     override fun deserialize(decoder: Decoder): BigDecimal =
         when (decoder) {
             is JsonDecoder -> decoder.decodeJsonElement().jsonPrimitive.content.toBigDecimal()
-            else           -> decoder.decodeString().toBigDecimal()
+            else -> decoder.decodeString().toBigDecimal()
         }
 
     /**
@@ -39,7 +39,7 @@ class BigDecimalSerializer : KSerializer<BigDecimal>{
     override fun serialize(encoder: Encoder, value: BigDecimal) =
         when (encoder) {
             is JsonEncoder -> encoder.encodeJsonElement(JsonUnquotedLiteral(value.toPlainString()))
-            else           -> encoder.encodeString(value.toPlainString())
+            else -> encoder.encodeString(value.toPlainString())
         }
 
 }

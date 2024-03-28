@@ -17,7 +17,7 @@ class TeamPlayerDTO {
 
     var avatarUrl: String = ""
 
-    @Serializable(with = BigDecimalSerializer::class)
+    @Serializable(BigDecimalSerializer::class)
     var gold: BigDecimal? = null
 
     var refreshIntervalMs: Long? = null
