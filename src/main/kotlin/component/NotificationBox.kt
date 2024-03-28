@@ -1,6 +1,7 @@
 package component
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -32,17 +33,15 @@ import java.util.*
 data class Message(
     val content: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val expireTime: Long = System.currentTimeMillis() + 5_000
+    val expireTime: Long = System.currentTimeMillis() + 5_000,
+    val isExpired: Boolean = false
 )
 
 
 @Composable
 fun MessageItem(
     message: Message,
-    windowWidthState: Int,
-    index: Int,
-    totalItems: Int,
-    isVisible: Boolean
+    windowWidthState: Int
 ) {
     var isVisible by remember { mutableStateOf(false) }
     val currentTime = remember { mutableStateOf(System.currentTimeMillis()) }
@@ -57,13 +56,14 @@ fun MessageItem(
 
     AnimatedVisibility(
         visible = isVisible,
-        enter = fadeIn(animationSpec = tween(durationMillis = 1000)) + slideInVertically(initialOffsetY = {it}),
+        enter = fadeIn(animationSpec = tween(durationMillis = 1000)) + slideInVertically(initialOffsetY = { it }),
         exit = fadeOut(animationSpec = tween(durationMillis = 1000)) + slideOutVertically(targetOffsetY = { 0 })
     ) {
         TextContent(message, windowWidthState)
 
     }
 }
+
 @Composable
 fun MessageList(
     messages: List<Message>,
@@ -75,14 +75,13 @@ fun MessageList(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-//            .animateContentSize()
+//            .animateContentSize(animationSpec = tween(1000, easing = LinearEasing))
         ,
         reverseLayout = false,
         state = listState
     ) {
-        itemsIndexed(messages) { index, message ->
-            val isVisible = visibleStates[message] ?: false
-            MessageItem(message, windowWidthState, index, messages.size, isVisible)
+        itemsIndexed(messages) { _, message ->
+            MessageItem(message, windowWidthState)
             visibleStates[message] = true
         }
     }
@@ -90,18 +89,16 @@ fun MessageList(
 
 @Composable
 fun TextContent(message: Message, windowWidthState: Int) {
-    Box(modifier = Modifier
-        .fillMaxWidth()
-//        .offset(y = offsetY)
-//            .offset(y = offsetY.value.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
     )
     {
         Row(
             modifier = Modifier
                 .padding(4.dp)
                 .width((windowWidthState / 4).dp)
-                .background(Color.Black.copy(0.3f), shape = RoundedCornerShape(2.dp))
-            ,
+                .background(Color.Black.copy(0.3f), shape = RoundedCornerShape(2.dp)),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
@@ -164,7 +161,6 @@ fun ChatBox() {
             val msg = "测试消息1111111$i"
             messages.add(Message(msg))
             delay(2000)
-            listState.scrollToItem(0) // 滚动到顶部项目
         }
     }
 }
