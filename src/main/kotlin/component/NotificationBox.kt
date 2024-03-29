@@ -36,7 +36,7 @@ import utils.convertTimestampToTimeStr
  * @date        2024/3/28 20:44
  */
 
-const val displayTime: Long = 60000
+const val displayTime: Long = 25000
 
 const val default: String = "default"
 
