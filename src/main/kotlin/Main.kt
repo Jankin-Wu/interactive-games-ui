@@ -70,7 +70,6 @@ fun main() = application {
             WebsocketClient()
             BulletComment(windowWidth)
             TeamPlayer()
-
             ChatBox()
         }
     }

@@ -21,6 +21,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,27 +33,31 @@ import java.util.*
  * @date        2024/3/28 20:44
  */
 
+const val displayTime: Long = 10000
+
+@Serializable
 data class Message(
     val content: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val expireTime: Long = System.currentTimeMillis() + 5_000,
-    val isExpired: Boolean = false
+    val expireTime: Long = System.currentTimeMillis() + displayTime,
+    var isExpired: Boolean = false
 )
 
 
 @Composable
 fun MessageItem(
     message: Message,
-    windowWidthState: Int
+    windowWidthState: Int,
+    index: Int
 ) {
     var isVisible by remember { mutableStateOf(false) }
     val currentTime = remember { mutableStateOf(System.currentTimeMillis()) }
-
     LaunchedEffect(Unit) {
         while (currentTime.value < message.expireTime) {
-            delay(1000)
+            delay(500)
             currentTime.value = System.currentTimeMillis()
             isVisible = currentTime.value <= message.expireTime
+            message.isExpired = currentTime.value > message.expireTime
         }
     }
 
@@ -60,7 +67,6 @@ fun MessageItem(
         exit = fadeOut(animationSpec = tween(durationMillis = 1000)) + slideOutVertically(targetOffsetY = { 0 })
     ) {
         TextContent(message, windowWidthState)
-
     }
 }
 
@@ -68,20 +74,24 @@ fun MessageItem(
 fun MessageList(
     messages: List<Message>,
     windowWidthState: Int,
-    listState: LazyListState // 添加 LazyListState 参数
+    listState: LazyListState
 ) {
     val visibleStates = remember { mutableStateMapOf<Message, Boolean>() }
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-//            .animateContentSize(animationSpec = tween(1000, easing = LinearEasing))
+//            .padding(16.dp)
         ,
         reverseLayout = false,
         state = listState
     ) {
-        itemsIndexed(messages) { _, message ->
-            MessageItem(message, windowWidthState)
+        itemsIndexed(messages) { index, message ->
+            Row(modifier = Modifier
+                .width(300.dp)
+                .animateContentSize(tween(1000, easing = LinearEasing))
+            ) {
+                MessageItem(message, windowWidthState, index)
+            }
             visibleStates[message] = true
         }
     }
@@ -89,33 +99,24 @@ fun MessageList(
 
 @Composable
 fun TextContent(message: Message, windowWidthState: Int) {
+    val currentTime = SimpleDateFormat("HH:mm:ss").format(Date(message.timestamp))
     Box(
         modifier = Modifier
             .fillMaxWidth()
-    )
-    {
+
+    ) {
         Row(
             modifier = Modifier
-                .padding(4.dp)
-                .width((windowWidthState / 4).dp)
+                .padding(vertical = 4.dp)
+                .fillMaxWidth()
+//                .width((windowWidthState / 4).dp)
                 .background(Color.Black.copy(0.3f), shape = RoundedCornerShape(2.dp)),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = message.content,
-                color = Color.White,
-                style = TextStyle(
-                    shadow = Shadow(
-                        color = Color.Black,
-                        offset = Offset(2f, 2f),
-                        blurRadius = 2f
-                    )
-                ),
-                modifier = Modifier
-                    .padding(3.dp)
-            )
-            Text(
-                text = SimpleDateFormat("HH:mm:ss").format(Date(message.timestamp)),
+                text = "[$currentTime] ${message.content}",
+//                fontFamily = FontFamily.Cursive,
+//                overflow = TextOverflow.Visible,
                 color = Color.White,
                 style = TextStyle(
                     shadow = Shadow(
@@ -158,9 +159,22 @@ fun ChatBox() {
         var i = 0
         while (true) {
             i += 1
-            val msg = "测试消息1111111$i"
+            val msg = "测试文本测试文本ABCDabcd$i"
             messages.add(Message(msg))
+            val messagesString = Json.encodeToString<List<Message>>(messages)
+            println("messages: $messagesString")
             delay(2000)
+        }
+    }
+    // 定时清理 messages 中的过期消息
+    LaunchedEffect(Unit) {
+        while (true) {
+            if (messages.isNotEmpty()) {
+                messages.removeFirst()
+            }
+            val messagesString = Json.encodeToString<List<Message>>(messages)
+            println("messages: $messagesString")
+            delay(displayTime + 1000)
         }
     }
 }
