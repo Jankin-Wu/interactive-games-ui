@@ -18,4 +18,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "aoe2-intergame-ui"
+rootProject.name = "interactive-games-ui"

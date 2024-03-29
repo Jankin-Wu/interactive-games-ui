@@ -11,7 +11,7 @@ import java.math.BigDecimal
  */
 @Serializable
 class TeamPlayerDTO {
-    var uid: Int? = null
+    var openId: String? = null
 
     var uname: String? = null
 

@@ -42,8 +42,8 @@ import kotlin.collections.set
  * @author      jankinwu
  * @date        2024/3/16 23:14
  */
-val blueStateMap = mutableStateMapOf<Int, TeamPlayerDTO>()
-val redStateMap = mutableStateMapOf<Int, TeamPlayerDTO>()
+val blueStateMap = mutableStateMapOf<String, TeamPlayerDTO>()
+val redStateMap = mutableStateMapOf<String, TeamPlayerDTO>()
 
 @Preview
 @Composable
@@ -52,8 +52,8 @@ fun TeamPlayer() {
     teamPlayerDTO.gold = BigDecimal(1432.54)
     teamPlayerDTO.uname = "测试用户"
     teamPlayerDTO.avatarUrl = "https://i1.hdslb.com/bfs/face/8dcda8cc51f125f739d0defb5d6e943a66e55669.jpg"
-    blueStateMap[1] = teamPlayerDTO
-    redStateMap[1] = teamPlayerDTO
+    blueStateMap["1"] = teamPlayerDTO
+    redStateMap["1"] = teamPlayerDTO
     Column(
         modifier = Modifier.fillMaxHeight().fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
@@ -212,28 +212,28 @@ fun PlayerCard(data: TeamPlayerDTO, isLeftSide: Boolean) {
     }
 }
 
-fun processMapChanges(teamMap: MutableMap<Int, TeamPlayerDTO>, playerList: List<TeamPlayerDTO>?, team: String) {
-    val uids = playerList?.map { it.uid }?.toSet() ?: emptySet()
+fun processMapChanges(teamMap: MutableMap<String, TeamPlayerDTO>, playerList: List<TeamPlayerDTO>?, team: String) {
+    val openids = playerList?.map { it.openId }?.toSet() ?: emptySet()
 
     // Remove players not in the current list
-    teamMap.keys.removeAll { it !in uids }
+    teamMap.keys.removeAll { it !in openids }
 
     // Add or update players in the current list
     playerList?.forEach { teamPlayerDTO ->
-        teamPlayerDTO.uid?.let {
+        teamPlayerDTO.openId?.let {
             teamMap[it] = teamPlayerDTO
         }
     }
 
     // Update component data
-    teamMap.forEach { (id, playerDTO) ->
+    teamMap.forEach { (openId, playerDTO) ->
 //        playerDTO.gold?.let { updateComponentData(id, it, team) }
-        updateComponentData(id, playerDTO, team)
+        updateComponentData(openId, playerDTO, team)
     }
 }
 
-fun updateComponentData(id: Int, playerDTO: TeamPlayerDTO, teamName: String) {
-    val componentState = if (teamName == redTeam) redStateMap[id] else blueStateMap[id]
+fun updateComponentData(openId: String, playerDTO: TeamPlayerDTO, teamName: String) {
+    val componentState = if (teamName == redTeam) redStateMap[openId] else blueStateMap[openId]
     componentState?.let {
         it.gold = playerDTO.gold?.setScale(2, RoundingMode.HALF_UP)
         it.refreshIntervalMs = playerDTO.refreshIntervalMs
