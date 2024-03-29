@@ -7,7 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
@@ -47,8 +47,7 @@ data class Message(
 @Composable
 fun MessageItem(
     message: Message,
-    windowWidthState: Int,
-    index: Int
+    windowWidthState: Int
 ) {
     var isVisible by remember { mutableStateOf(false) }
     val currentTime = remember { mutableStateOf(System.currentTimeMillis()) }
@@ -85,12 +84,16 @@ fun MessageList(
         reverseLayout = false,
         state = listState
     ) {
-        itemsIndexed(messages) { index, message ->
-            Row(modifier = Modifier
-                .width(300.dp)
-                .animateContentSize(tween(1000, easing = LinearEasing))
+        items(messages, key = { message ->
+            // 使用消息的时间戳作为唯一标识符
+            message.timestamp
+        }) { message ->
+            Row(
+                modifier = Modifier
+                    .width(300.dp)
+                    .animateContentSize(tween(1000, easing = LinearEasing))
             ) {
-                MessageItem(message, windowWidthState, index)
+                MessageItem(message, windowWidthState)
             }
             visibleStates[message] = true
         }
@@ -162,7 +165,7 @@ fun ChatBox() {
             val msg = "测试文本测试文本ABCDabcd$i"
             messages.add(Message(msg))
             val messagesString = Json.encodeToString<List<Message>>(messages)
-            println("messages: $messagesString")
+//            println("messages: $messagesString")
             delay(2000)
         }
     }
@@ -173,7 +176,7 @@ fun ChatBox() {
                 messages.removeFirst()
             }
             val messagesString = Json.encodeToString<List<Message>>(messages)
-            println("messages: $messagesString")
+            println("remove messages: $messagesString")
             delay(displayTime + 1000)
         }
     }
