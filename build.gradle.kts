@@ -71,7 +71,7 @@ compose.desktop {
         }
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
-            packageName = "AoE2 Intergame UI"
+            packageName = "Interactive Games UI"
             packageVersion = "1.0.0"
             windows {
                 shortcut = true
@@ -79,7 +79,7 @@ compose.desktop {
                 menu = true
                 upgradeUuid = "781660a5-c9c0-4e70-9d2a-1606d9fc9b12"
                 iconFile.set(project.file("game.ico"))
-                packageName = "AoE2 Intergame UI"
+                packageName = "Interactive Games UI"
             }
         }
         jvmArgs("-Dskiko.renderApi=OPENGL")

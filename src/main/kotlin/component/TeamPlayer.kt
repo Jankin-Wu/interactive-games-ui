@@ -26,6 +26,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lt.load_the_image.rememberImagePainter
+import constants.blueTeam
+import constants.redTeam
 import dto.TeamDTO
 import dto.TeamPlayerDTO
 import kotlinx.serialization.json.Json
@@ -40,9 +42,6 @@ import kotlin.collections.set
  * @author      jankinwu
  * @date        2024/3/16 23:14
  */
-
-const val redTeam = "萨拉森人"
-const val blueTeam = "十字军"
 val blueStateMap = mutableStateMapOf<Int, TeamPlayerDTO>()
 val redStateMap = mutableStateMapOf<Int, TeamPlayerDTO>()
 

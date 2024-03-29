@@ -114,7 +114,7 @@ fun WebsocketClient() {
                 for (frame in incoming) {
                     frame as? Frame.Text ?: continue
                     val receivedText = frame.readText()
-                    println("Received message: $receivedText")
+//                    println("Received message: $receivedText")
                     handleMessage(receivedText)
                 }
             }
@@ -161,6 +161,7 @@ fun handleMessage(receivedText: String) {
     when (pluginItemCode) {
         1 -> handleBulletMsg(data)
         2 -> handlePlayCardMsg(data)
+        4 -> handleNotificationMsg(data)
         else -> Unit
     }
 }
