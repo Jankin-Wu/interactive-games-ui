@@ -85,7 +85,7 @@ fun MessageList(
         state = listState
     ) {
         items(messages, key = { message ->
-            // 使用消息的时间戳作为唯一标识符
+            // 使用消息的时间戳作为唯一标识符，解决因messages元素被删除导致的所有组件被重组的问题
             message.timestamp
         }) { message ->
             Row(
@@ -172,12 +172,13 @@ fun ChatBox() {
     // 定时清理 messages 中的过期消息
     LaunchedEffect(Unit) {
         while (true) {
-            if (messages.isNotEmpty()) {
+            if (messages.isNotEmpty() && messages.first().isExpired) {
                 messages.removeFirst()
             }
-            val messagesString = Json.encodeToString<List<Message>>(messages)
-            println("remove messages: $messagesString")
-            delay(displayTime + 1000)
+//            val messagesString = Json.encodeToString<List<Message>>(messages)
+//            println("remove messages: $messagesString")
+//            println("messages size: ${messages.size}")
+            delay(2000)
         }
     }
 }
